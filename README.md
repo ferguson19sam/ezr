@@ -14,6 +14,8 @@ href="https://zenodo.org/doi/10.5281/zenodo.11183058"><img src="https://zenodo.o
 
 #  Easier AI
 
+Test
+
 <img align=right width=300 src="/docs/img/less.png">
 
 How to  program simpler, smarter, faster, more flexible and
