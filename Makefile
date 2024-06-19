@@ -88,7 +88,8 @@ var/out/alls/%.csv : data/hpo/%.csv     ; echo $<; ./ezr.py -t $< -R alls | tee 
 
 alls: 
 	mkdir -p var/out/alls
-	$(MAKE) -j $(ALLS)
+	# $(MAKE) -j $(ALLS)
+	cd var/out/alls; bash ${Root}/etc/rq.sh | column -s, -t
 
 SMOS= $(subst data/config,var/out/smos,$(wildcard data/config/*.csv)) \
       $(subst data/misc,var/out/smos,$(wildcard data/misc/*.csv)) \

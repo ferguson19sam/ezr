@@ -35,7 +35,7 @@ function evaluations(    rank,rx) {
    for(rx in evals) { 
      printf(rx)
      for(rank=0; rank<=maxRank;rank++) 
-       printf(" ,%3s (%3s)",   int(mu(evals[rx][rank])), int(sd(evals[rx][rank])) )
+       printf(" ,%3s (%3s)",   int(0.5 + mu(evals[rx][rank])), int(0.5 + sd(evals[rx][rank])) )
      print("") }}
 
 function improvement(    rank,rx) {
@@ -59,4 +59,4 @@ function ranks(   rank,rx) {
      print("") }}
 
 END { ranks() ; print("");  evaluations();  improvement()}
-'
+' | column -s, -t

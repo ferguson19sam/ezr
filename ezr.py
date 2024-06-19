@@ -491,7 +491,7 @@ def smo(i:data, score=lambda B,R: B-R, callBack=lambda x:x ):
   def _ranked(lst:rows) -> rows:
     "Sort `lst` by distance to heaven. Called by `_smo1()`."
     lst = sorted(lst, key = lambda r:d2h(i,r))
-    callBack([d2h(i,r) for r in lst])
+    # callBack([d2h(i,r) for r in lst])
     return lst
 
   def _guess(todo:rows, done:rows) -> rows:
@@ -889,12 +889,12 @@ class eg:
     for last in [10,20,30,40]:
       the.Last= last
       guess = lambda : clone(d,random.choices(d.rows, k=last+the.label),rank=True).rows[0]
-      rx=f"random,{last}"
+      rx=f"random,{last + the.label}"
       rxs[rx] = SOME(txt=rx, inits=[d2h(d,guess()) for _ in range(repeats)])
-      for  guessFaster in [False,True]:
+      for  guessFaster in [True]:
         for what,how in  policies.items():
           the.GuessFaster = guessFaster
-          rx=f"{what}/{the.GuessFaster},{the.Last}"
+          rx=f"{what}/{the.GuessFaster},{the.Last + the.label}"
           rxs[rx] = SOME(txt=rx)
           for _ in range(repeats):
              btw(".")
