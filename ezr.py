@@ -21,9 +21,10 @@
       -n --n       tinyN                          = 12    
       -N --N       smallN                         = 0.5    
       -p --p       distance function coefficient  = 2    
+      -P --Patience how long to wait for better   = 0
       -R --Run     start up action method         = help    
       -s --seed    random number seed             = 1234567891    
-      -t --train   training data                  = data/misc/auto93.csv    
+      -t --train   training data                  = data/config/SS-A.csv    
       -T --test    test data (defaults to train)  = None  
       -v --version show version                   = False   
       -x --xys     max #bins in discretization    = 16    
@@ -519,8 +520,25 @@ def smo(i:data, score=lambda B,R: B-R, callBack=lambda x:x ):
       done = _ranked(done)
     return done
 
+  def _smo_early_stopping(todo: rows, done: rows) -> rows:
+      "Guess the `top`  unlabeled row, add that to `done`, resort `done`, and repeat"
+      best_val, counter = None, 0
+      for k in range(the.Last - the.label):
+          if len(todo) < 3 or counter >= 10:
+              break
+          top, *todo = _guess(todo, done)
+          val = d2h(i, top)
+          if best_val is None or val < best_val:
+              best_val, counter = val, 0
+          else:
+              counter += 1
+          done = _ranked(done + [top])
+      # print(f'terminated at {k + 1 + the.label}/{the.Last}')
+      return done
+
   random.shuffle(i.rows) # remove any  bias from older runs
-  return _smo1(i.rows[the.label:], _ranked(i.rows[:the.label]))
+  act = _smo1 if the.Patience == 0 else _smo_early_stopping
+  return act(i.rows[the.label:], _ranked(i.rows[:the.label]))
 
 #--------- --------- --------- --------- --------- --------- --------- --------- ---------
 # ## Stats
@@ -861,7 +879,7 @@ class eg:
     rxs["baseline"] = SOME(txt=f"baseline,{len(d.rows)}",inits=[d2h(d,row) for row in d.rows])
     for last in [15,20,25,30,35,40]:
       the.Last= last
-      guess = lambda : clone(d,random.choices(d.rows, k=last+the.label),rank=True).rows[0]
+      guess = lambda : clone(d,random.choices(d.rows, k=last),rank=True).rows[0]
       rx=f"random,{last}"
       rxs[rx] = SOME(txt=rx, inits=[d2h(d,guess()) for _ in range(repeats)])
       for beam in [1,0.9,0.8,0.7,0.6]:
@@ -899,6 +917,33 @@ class eg:
           for _ in range(repeats):
              btw(".")
              rxs[rx].add(d2h(d,smo(d,how)[0]))
+          btw("\n")
+    report(rxs.values())
+
+  def smos_early_stop():
+    "try different sample sizes"
+    policies = dict(exploit = lambda B,R: B-R)
+    repeats=20
+    d = DATA(csv(the.train))
+    e = math.exp(1)
+    rxs={}
+    rxs["baseline"] = SOME(txt=f"baseline,{len(d.rows)}",inits=[d2h(d,row) for row in d.rows])
+    for last in [10,15,20,25,30,35,40]:
+      the.Last= last
+      guess = lambda : clone(d,random.choices(d.rows, k=last),rank=True).rows[0]
+      rx=f"random,{last}"
+      rxs[rx] = SOME(txt=rx, inits=[d2h(d,guess()) for _ in range(repeats)])
+      for early_stopping in [False]:
+        the.Patience = early_stopping * 1
+        for what,how in  policies.items():
+          print(what)
+          print(how)
+          the.GuessFaster = True
+          rx=f"{what}/{early_stopping}, {the.Last}"
+          rxs[rx] = SOME(txt=rx)
+          for _ in range(repeats):
+              btw(".")
+              rxs[rx].add(d2h(d,smo(d,how)[0]))
           btw("\n")
     report(rxs.values())
 
@@ -1020,7 +1065,7 @@ def report(somes):
   for some in sk(somes):
     if some.rank != last: print("#")
     last=some.rank
-    print(all.bar(some,width=40,word="%20s", fmt="%5.2f"))
+    print(all.bar(some,width=40,word="%20s", fmt="%5.3f"))
 #--------- --------- --------- --------- --------- --------- --------- --------- ---------
 
 if __name__ == "__main__": main()

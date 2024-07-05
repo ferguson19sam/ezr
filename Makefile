@@ -74,8 +74,6 @@ docs/%.html : %.py ## .py --> .html
 	ps2pdf $@.ps $@; rm $@.ps    
 	open $@
 
-
-
 ALLS= $(subst data/config,var/out/alls,$(wildcard data/config/*.csv)) \
       $(subst data/misc,var/out/alls,$(wildcard data/misc/*.csv)) \
       $(subst data/process,var/out/alls,$(wildcard data/process/*.csv)) \
@@ -88,7 +86,7 @@ var/out/alls/%.csv : data/hpo/%.csv     ; echo $<; ./ezr.py -t $< -R alls | tee 
 
 alls: 
 	mkdir -p var/out/alls
-	# $(MAKE) -j $(ALLS)
+	$(MAKE) -j $(ALLS)
 	cd var/out/alls; bash ${Root}/etc/rq.sh | column -s, -t
 
 SMOS= $(subst data/config,var/out/smos,$(wildcard data/config/*.csv)) \
@@ -104,3 +102,18 @@ var/out/smos/%.csv : data/hpo/%.csv     ; echo $<; ./ezr.py -t $< -R smos | tee 
 smos: 
 	mkdir -p var/out/smos
 	$(MAKE) -j $(SMOS)
+
+SMOS_EARLY_STOP= $(subst data/process,var/out/smos_early_stop,$(wildcard data/process/*.csv)) \
+				 $(subst data/hpo,var/out/smos_early_stop,$(wildcard data/hpo/*.csv)) \
+				 $(subst data/misc,var/out/smos_early_stop,$(wildcard data/misc/*.csv)) \
+				 $(subst data/config,var/out/smos_early_stop,$(wildcard data/config/*.csv)) 
+
+var/out/smos_early_stop/%.csv : data/process/%.csv  ; echo $<; ./ezr.py -t $< -R smos_early_stop | tee $@
+var/out/smos_early_stop/%.csv : data/hpo/%.csv  ; echo $<; ./ezr.py -t $< -R smos_early_stop | tee $@
+var/out/smos_early_stop/%.csv : data/misc/%.csv  ; echo $<; ./ezr.py -t $< -R smos_early_stop | tee $@
+var/out/smos_early_stop/%.csv : data/config/%.csv  ; echo $<; ./ezr.py -t $< -R smos_early_stop | tee $@
+
+smos_early_stop: 
+	mkdir -p var/out/smos_early_stop
+	$(MAKE) -j $(SMOS_EARLY_STOP)
+	cd var/out/smos_early_stop; bash ${Root}/etc/rq.sh | column -s, -t
